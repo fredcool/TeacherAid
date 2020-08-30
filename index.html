@@ -183,14 +183,23 @@
                 console.log(idCol, nameCol, pointsCol, templateBeginRow);
                 // Start merging
                 for (var templateRow in template.data) {
-                    if (templateRow < templateBeginRow)
+                    if (templateRow < templateBeginRow) {
                         continue;
+                    }
+                    if (template.data[templateRow].length - 1 < pointsCol) {
+                        continue;
+                    }
                     for(var gradesRow in grades.data) {
                         if (gradesRow < gradesBeginRow) {
                             continue;
                         }
+                        if (grades.data[gradesRow].length - 1 < gradeCol)
+                            continue;
+                        var normalizedName = normalizeName(template.data[templateRow][nameCol]);
+                        var normalizedFirstName = normalizeName(grades.data[gradesRow][firstNameCol]);
+                        var normalizerLastName = normalizeName(grades.data[gradesRow][lastNameCol]);
                         //console.log(templateRow);
-                        if (normalizeName(template.data[templateRow][nameCol]) == normalizeName(grades.data[gradesRow][firstNameCol]) + ' ' + normalizeName(grades.data[gradesRow][lastNameCol])) {
+                        if (normalizedName ==  normalizedFirstName + ' ' + normalizerLastName) {
                             template.data[templateRow][pointsCol] = grades.data[gradesRow][gradeCol];
                             break;
                         }
