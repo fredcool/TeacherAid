@@ -210,7 +210,7 @@
                         var normalizerLastName = normalizeName(grades.data[gradesRow][lastNameCol]);
                         //console.log(templateRow);
                         if (normalizedName ==  normalizedFirstName + ' ' + normalizerLastName) {
-                            template.data[templateRow][pointsCol] = grades.data[gradesRow][gradeCol];
+                            template.data[templateRow][pointsCol] = Math.ceil(grades.data[gradesRow][gradeCol]);
                             break;
                         }
                     }       
