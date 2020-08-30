@@ -1,0 +1,264 @@
+<html>
+<head>
+    <title>TeacherAid</title>
+    <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="node_modules/papaparse/papaparse.min.js"></script>
+
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">TeacherAid</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <!-- <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Dropdown
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="#">Action</a>
+                <a class="dropdown-item" href="#">Another action</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Something else here</a>
+              </div>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+            </li>
+          </ul>
+          <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+          </form>
+        </div> -->
+    </nav>
+
+    <div class="container mt-3">
+        <form id="form">
+            <div class="form-group">
+                <label for="exampleFormControlFile1">Google Classroom CSV</label>
+                <input type="file" class="form-control-file" id="grades">
+            </div>
+
+            <div class="form-group">
+                <label for="exampleFormControlFile1">Skyward Grade Sheet</label>
+                <input type="file" class="form-control-file" id="template">
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <button type="submit" class="btn btn-primary">Merge</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        function buildConfig(completeCallback) {
+            return {
+                delimiter: "",	// auto-detect
+                newline: "",	// auto-detect
+                quoteChar: '"',
+                escapeChar: '"',
+                header: false,
+                transformHeader: undefined,
+                dynamicTyping: false,
+                preview: 0,
+                encoding: "",
+                worker: false,
+                comments: false,
+                step: undefined,
+                complete: completeCallback,
+                error: undefined,
+                download: false,
+                downloadRequestHeaders: undefined,
+                downloadRequestBody: undefined,
+                skipEmptyLines: false,
+                chunk: undefined,
+                chunkSize: undefined,
+                fastMode: undefined,
+                beforeFirstChunk: undefined,
+                withCredentials: undefined,
+                transform: undefined,
+                delimitersToGuess: [',', '\t', '|', ';', Papa.RECORD_SEP, Papa.UNIT_SEP]
+            }
+        }
+        function normalizeName (src) {
+            const regex = /\(.*\)/g;
+            const subst = ``;
+
+            // The substituted value will be contained in the result variable
+            const result = src.replace(regex, subst).trim();
+
+            console.log('Substitution result: ', result);
+            return result;
+        }
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+        function merge(grades, template) {
+            if (grades != undefined && template != undefined) {
+                console.log('start merging');
+                console.log(grades, template);
+                var lastNameCol = undefined;
+                var firstNameCol = undefined;
+                var gradeCol = undefined;
+                var gradesBeginRow = undefined;
+                // Parse grades header
+                for(var i in grades.data[0]) {
+                    if (grades.data[0][i].toUpperCase() == 'FIRST NAME') {
+                        firstNameCol = i;
+                        continue;
+                    }
+                    else if (grades.data[0][i].toUpperCase() == 'LAST NAME') {
+                        lastNameCol = i;
+                        continue;
+                    }
+                    else if (grades.data[0][i].toUpperCase() == 'GRADE') {
+                        gradeCol = i;
+                        continue;
+                    }
+                    if (firstNameCol != undefined && lastNameCol != undefined && gradeCol != undefined)
+                        break;
+                }
+                console.log(firstNameCol, lastNameCol, gradeCol);
+                for(var row in grades.data) {
+                    if (row == 0)
+                        continue;
+                    if (grades.data[row][firstNameCol] != '' && grades.data[row][lastNameCol] != '') {
+                        gradesBeginRow = row;
+                        break;
+                    }
+                }
+                console.log(gradesBeginRow);
+                var idCol = undefined;
+                var nameCol = undefined;
+                var pointsCol = undefined;
+                var templateBeginRow = undefined;
+                // Find header row
+                for(var row in template.data) {
+                    var tempIdCol = undefined;
+                    var tempNameCol = undefined;
+                    var tempPointsCol = undefined;
+                    for(var col in template.data[row]) {
+                        if (template.data[row][col].toUpperCase() == 'ID') {
+                            tempIdCol = col;
+                        }
+                        else if (template.data[row][col].toUpperCase() == 'STUDENT') {
+                            tempNameCol = col;
+                        }
+                        else if (template.data[row][col].toUpperCase() == 'POINTS') {
+                            tempPointsCol = col;
+                        }
+                    }
+                    if (tempIdCol != undefined && tempNameCol != undefined && tempPointsCol != undefined) {
+                        idCol = parseInt(tempIdCol);
+                        nameCol = parseInt(tempNameCol);
+                        pointsCol = parseInt(tempPointsCol);
+                        templateBeginRow = parseInt(row) + 1;
+                        break;
+                    }
+                }
+                console.log(idCol, nameCol, pointsCol, templateBeginRow);
+                // Start merging
+                for (var templateRow in template.data) {
+                    if (templateRow < templateBeginRow)
+                        continue;
+                    for(var gradesRow in grades.data) {
+                        if (gradesRow < gradesBeginRow) {
+                            continue;
+                        }
+                        //console.log(templateRow);
+                        if (normalizeName(template.data[templateRow][nameCol]) == normalizeName(grades.data[gradesRow][firstNameCol]) + ' ' + normalizeName(grades.data[gradesRow][lastNameCol])) {
+                            template.data[templateRow][pointsCol] = grades.data[gradesRow][gradeCol];
+                            break;
+                        }
+                    }       
+                }
+                console.log(template);
+                var mergeResult = Papa.unparse(template.data, {
+                    quotes: false, //or array of booleans
+                    quoteChar: '"',
+                    escapeChar: '"',
+                    delimiter: ",",
+                    header: true,
+                    newline: "\r\n",
+                    skipEmptyLines: false, //other option is 'greedy', meaning skip delimiters, quotes, and whitespace.
+                    columns: null //or array of strings
+                });
+                //console.log(mergeResult);
+                download('merge_'+$('#template')[0].files[0].name, mergeResult);
+            }
+        }
+        $(document).ready(function() {
+            console.log('ready');
+            var grades;
+            var template;
+            $('#form').submit(function(e) {
+                e.preventDefault();
+                $('#grades').parse({
+                    config: buildConfig(function(results) {
+                        grades = results;
+                        merge(grades, template);
+                    }),
+                    before: function(file, inputElem)
+                    {
+                        // executed before parsing each file begins;
+                        // what you return here controls the flow
+                    },
+                    error: function(err, file, inputElem, reason)
+                    {
+                        // executed if an error occurs while loading the file,
+                        // or if before callback aborted for some reason
+                    },
+                    complete: function()
+                    {
+                        // executed after all files are complete
+                    }
+                });
+                $('#template').parse({
+                    config: buildConfig(function(results) {
+                        template = results;
+                        merge(grades, template);
+                    }),
+                    before: function(file, inputElem)
+                    {
+                        // executed before parsing each file begins;
+                        // what you return here controls the flow
+                    },
+                    error: function(err, file, inputElem, reason)
+                    {
+                        // executed if an error occurs while loading the file,
+                        // or if before callback aborted for some reason
+                    },
+                    complete: function()
+                    {
+                        // executed after all files are complete
+                    }
+                });
+            }); 
+        });
+    </script>
+</body>
+</html>
