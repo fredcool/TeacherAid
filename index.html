@@ -95,6 +95,16 @@
                 delimitersToGuess: [',', '\t', '|', ';', Papa.RECORD_SEP, Papa.UNIT_SEP]
             }
         }
+        function normalizeFirstName (src) {
+            const regex = /^(\S*).*/g;
+            const subst = `$1`;
+
+            // The substituted value will be contained in the result variable
+            const result = src.replace(regex, subst);
+
+            //console.log('Substitution result: ', result);
+            return result;
+        }
         function normalizeName (src) {
             const regex = /\(.*\)/g;
             const subst = ``;
@@ -102,7 +112,7 @@
             // The substituted value will be contained in the result variable
             const result = src.replace(regex, subst).trim();
 
-            console.log('Substitution result: ', result);
+            //console.log('Substitution result: ', result);
             return result;
         }
         function download(filename, text) {
@@ -196,7 +206,7 @@
                         if (grades.data[gradesRow].length - 1 < gradeCol)
                             continue;
                         var normalizedName = normalizeName(template.data[templateRow][nameCol]);
-                        var normalizedFirstName = normalizeName(grades.data[gradesRow][firstNameCol]);
+                        var normalizedFirstName = normalizeFirstName(grades.data[gradesRow][firstNameCol]);
                         var normalizerLastName = normalizeName(grades.data[gradesRow][lastNameCol]);
                         //console.log(templateRow);
                         if (normalizedName ==  normalizedFirstName + ' ' + normalizerLastName) {
